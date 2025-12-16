@@ -123,13 +123,13 @@ Follow the steps below to install and run the project locally.
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/JusticeRollOn.git
+git clone https://github.com/Mudasirrr/JusticeRollOn.git
 cd JusticeRollOn
 
 
 ## 🏗️ System Architecture
 
-```text
+```-
 [ WordPress Frontend ]
         ↓ REST APIs
 [ Django Backend (This Repository) ]
