@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Justice RollOn{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}" />
+  </head>
+
+  <body>
+    <!-- 🌐 Top Navigation -->
+    <div class="topnav">
+      <div>
+        <a href="{% url 'home' %}"
+          style="font-weight: 600; color: var(--primary); text-decoration: none;">
+          ⚖️ Justice RollOn
+        </a>
+      </div>
+      <div>
+        {% if user.is_authenticated %}
+          <span style="margin-right: 10px">
+            Welcome, <strong>{{ user.username }}</strong> ({{ user.role|title }})
+          </span>
+          <a class="btn outline" href="{% url 'dashboard2' %}">Dashboard</a>
+          <a class="btn" href="{% url 'logout' %}">Logout</a>
+        {% else %}
+          <a class="btn outline" href="{% url 'login' %}">Login</a>
+          <a class="btn" href="{% url 'register' %}">Register</a>
+        {% endif %}
+        <a class="btn outline" href="{% url 'justice_index' %}">Public Petitions</a>
+      </div>
+    </div>
+
+    <!-- 🧱 Main Page Content -->
+    <div class="container">{% block content %}{% endblock %}</div>
+
+    <!-- 🔔 Toast Container -->
+    <div class="toasts bottom-right" id="toast-container"></div>
+
+    {% if messages %}
+      <script id="django-messages" type="application/json">
+        [
+        {% for message in messages %}
+          {"level": "{{ message.tags }}", "text": "{{ message|escapejs }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+        ]
+      </script>
+    {% endif %}
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // --- Load Django messages as toasts ---
+      let djangoMessages = [];
+      try {
+        const script = document.getElementById("django-messages");
+        if (script) djangoMessages = JSON.parse(script.textContent);
+      } catch (err) {
+        console.warn("⚠️ Could not parse Django messages:", err);
+      }
+
+      djangoMessages.forEach(m => {
+        showToast(m.text, m.level.includes("error") || m.level.includes("warning"));
+      });
+
+      // --- Global showToast() function (usable by all pages) ---
+      window.showToast = function (msg, isError = false) {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.textContent = msg;
+        toast.style.borderLeft = isError
+          ? "4px solid #dc2626"
+          : "4px solid var(--success)";
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+      };
+    });
+    </script>
+  </body>
+</html>

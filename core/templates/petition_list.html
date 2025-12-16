@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}My Petitions - Justice RollOn{% endblock %}
+{% block content %}
+
+<h2 style="margin-bottom: 16px;">📜 My Petitions</h2>
+
+<!-- ✅ Petition Creation Form -->
+<div class="card" style="margin-bottom: 1.5rem; padding: 20px; max-width: 700px;">
+  <h3 style="margin-bottom: 12px;">📝 Create a New Petition</h3>
+
+  {% if user.role == "citizen" %}
+  <form method="POST" action="{% url 'petition_create' %}">
+    {% csrf_token %}
+
+    <label class="form-label">Title *</label>
+    <input type="text" name="title" required
+           placeholder="Enter petition title"
+           style="width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:1px solid #CBD5E1;">
+
+    <label class="form-label">Description *</label>
+    <textarea name="description" rows="4" required
+              placeholder="Describe your petition"
+              style="width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:1px solid #CBD5E1;"></textarea>
+
+    <label class="form-label">Legal Category</label>
+    <select name="category"
+            style="width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:1px solid #CBD5E1;">
+      {% for key, label in categories %}
+        <option value="{{ key }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="form-label">Visibility</label>
+    <select name="visibility"
+            style="width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:1px solid #CBD5E1;">
+      {% for key, label in visibilities %}
+        <option value="{{ key }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="form-label">Attach Existing Evidence</label>
+    {% if evidences %}
+      <div style="margin:8px 0 16px 0;">
+        {% for e in evidences %}
+          <label style="display:flex;align-items:center;margin-bottom:6px;gap:8px;">
+            <input type="checkbox" name="evidences" value="{{ e.id }}">
+            <span>{{ e.title }}</span>
+            <small style="color:#64748B;">({{ e.file_type }})</small>
+            {% if e.verification_status == "verified" %}
+              <span style="color:var(--success);font-size:13px;font-weight:600;">✔ Verified</span>
+            {% else %}
+              <span style="color:var(--warning);font-size:13px;">Pending</span>
+            {% endif %}
+          </label>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:#64748B;font-size:14px;">No uploaded evidence available.</p>
+    {% endif %}
+
+    <button type="submit" class="btn" style="width:100%;margin-top:10px;">📤 Save Petition</button>
+  </form>
+  {% else %}
+    <p style="color:#64748B;">Only citizens can create petitions.</p>
+  {% endif %}
+</div>
+
+<!-- ✅ Petition List -->
+<h3 style="margin-bottom:10px;">📂 Your Petitions</h3>
+
+{% if petitions %}
+  {% for p in petitions %}
+    <div class="card" style="margin-bottom: 12px;" id="petition-{{ p.id }}">
+      <h3 style="margin-top:0;">{{ p.title }}</h3>
+      <p style="margin-bottom:8px;">{{ p.description|truncatechars:120 }}</p>
+
+      <div style="font-size:14px;color:#475569;margin-bottom:8px;">
+        <strong>Category:</strong> {{ p.category }} |
+        <strong>Status:</strong>
+        {% if p.status == "published" %}
+          <span style="color:var(--success);font-weight:600;">Published</span>
+        {% elif p.status == "pending" %}
+          <span style="color:var(--warning);font-weight:600;">Pending Review</span>
+        {% elif p.status == "draft" %}
+          <span style="color:var(--ink);font-weight:600;">Draft</span>
+        {% else %}
+          <span style="color:#64748B;">{{ p.status|title }}</span>
+        {% endif %}
+        | <strong>Visibility:</strong> {{ p.visibility|title }}
+      </div>
+
+      {% if p.supporter_count %}
+        <div style="font-size:13px;color:#64748B;">👥 {{ p.supporter_count }} supporters</div>
+      {% endif %}
+
+      {% if p.status == "draft" %}
+      <div style="margin-top:10px;">
+        <button class="btn outline submit-btn" data-id="{{ p.id }}">📤 Submit for Review</button>
+      </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <p style="color:#64748B;">No petitions yet. Create one above to get started!</p>
+{% endif %}
+
+<!-- 🔔 Toast Container -->
+<div class="toasts bottom-right" id="toast-container"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("✅ Petition list JS loaded");
+
+  // ✅ Toast Helper
+  function showToast(message, isError = false) {
+    const toastContainer = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    toast.style.borderLeft = isError
+      ? "4px solid #dc2626"
+      : "4px solid var(--success)";
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+
+  // ✅ CSRF helper
+  function getCookie(name) {
+    const cookieValue = document.cookie
+      .split(";")
+      .map(c => c.trim())
+      .find(c => c.startsWith(name + "="));
+    return cookieValue ? decodeURIComponent(cookieValue.split("=")[1]) : null;
+  }
+
+  // ✅ Submit for Review
+  const submitButtons = document.querySelectorAll(".submit-btn");
+  submitButtons.forEach(btn => {
+    btn.addEventListener("click", async function () {
+      const id = this.dataset.id;
+      try {
+        const response = await fetch(`/api/petition/${id}/submit-for-review/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "Accept": "application/json"
+          }
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message || "📤 Petition submitted for review!");
+          const card = document.getElementById(`petition-${id}`);
+          const btn = card.querySelector(".submit-btn");
+          if (btn) btn.remove();
+          card.querySelector("div").innerHTML +=
+            '<span style="color:var(--warning);font-weight:600;">Pending Review</span>';
+        } else {
+          showToast(data.error || "⚠️ Submission failed.", true);
+        }
+      } catch (error) {
+        console.error("❌ Error:", error);
+        showToast("⚠️ Network error.", true);
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}

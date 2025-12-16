@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Dashboard - Justice RollOn{% endblock %}
+{% block content %}
+
+<h2 style="margin-bottom: 16px;">⚖️ Dashboard</h2>
+
+{% if admin_view %}
+<div>
+  <h3 style="margin-bottom: 10px;">🧾 Petitions Pending Approval</h3>
+  {% if petitions %}
+    {% for p in petitions %}
+    <div class="card" id="petition-{{ p.id }}">
+      <h3 style="margin-top: 0;">{{ p.title }}</h3>
+      <p style="margin-bottom: 8px;">{{ p.description|truncatechars:150 }}</p>
+
+      <div style="font-size: 14px; color: #475569; margin-bottom: 10px;">
+        <strong>Creator:</strong> {{ p.creator.username }} |
+        <strong>Category:</strong> {{ p.category }} |
+        <strong>Created:</strong> {{ p.created_at|date:"M d, Y" }}
+      </div>
+
+      {% if p.supporter_count %}
+      <div style="font-size: 13px; color: #64748B; margin-bottom: 10px;">
+        👥 <strong>{{ p.supporter_count }}</strong> supporters
+      </div>
+      {% endif %}
+
+      <button class="btn approve-btn" data-id="{{ p.id }}">✅ Approve Petition</button>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="card" style="text-align: center;">
+      <p style="color: #64748B;">🎉 No pending petitions right now. All caught up!</p>
+    </div>
+  {% endif %}
+</div>
+{% endif %}
+
+
+{% if lawyer_view %}
+<div>
+  <h3 style="margin-bottom: 10px;">🗓️ Your Consultation Slots</h3>
+  {% if slots %}
+    {% for s in slots %}
+    <div class="card">
+      <strong>{{ s.start_time|date:"M d, Y H:i" }}</strong> — 
+      {% if s.is_booked %}
+        <span style="color: var(--warning); font-weight: 600;">Booked</span>
+      {% else %}
+        <span style="color: var(--success); font-weight: 600;">Available</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="card">
+      <p style="color: #64748B;">No consultation slots created yet.</p>
+    </div>
+  {% endif %}
+</div>
+{% endif %}
+
+
+{% if citizen_view %}
+<div style="margin-bottom: 24px;">
+  <h3 style="margin-bottom: 10px;">📁 Your Evidences</h3>
+  {% if evidences %}
+    {% for e in evidences %}
+    <div class="card">
+      <strong>{{ e.title }}</strong><br>
+      <span style="font-size: 14px; color: #475569;">
+        Type: {{ e.file_type }} | Status:
+        {% if e.verification_status == "verified" %}
+          <span style="color: var(--success); font-weight: 600;">Verified</span>
+        {% else %}
+          <span style="color: var(--warning); font-weight: 600;">Pending</span>
+        {% endif %}
+      </span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color: #64748B;">No evidences uploaded yet.</p>
+  {% endif %}
+  <a class="btn" href="{% url 'evidence_list' %}" style="margin-top: 8px;">View All Evidences</a>
+</div>
+
+<div>
+  <h3 style="margin-bottom: 10px;">📜 Your Petitions</h3>
+  <a class="btn" href="{% url 'petition_create' %}" style="margin-bottom: 10px;">+ Create New Petition</a>
+
+  {% if petitions %}
+    {% for p in petitions %}
+    <div class="card" id="petition-{{ p.id }}">
+      <h3 style="margin-top: 0;">{{ p.title }}</h3>
+      <p style="margin-bottom: 6px;">{{ p.description|truncatechars:100 }}</p>
+      <span style="font-size: 14px;">
+        Status:
+        {% if p.status == "published" %}
+          <span style="color: var(--success); font-weight: 600;">Published</span>
+        {% elif p.status == "pending" %}
+          <span style="color: var(--warning); font-weight: 600;">Pending Review</span>
+        {% elif p.status == "draft" %}
+          <span style="color: var(--ink); font-weight: 600;">Draft</span>
+          <button class="btn outline submit-btn" data-id="{{ p.id }}" style="margin-left: 8px;">📤 Submit for Review</button>
+        {% else %}
+          <span style="color: var(--ink); font-weight: 600;">{{ p.status|title }}</span>
+        {% endif %}
+      </span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color: #64748B;">You haven't created any petitions yet.</p>
+  {% endif %}
+  <a class="btn" href="{% url 'petition_list' %}" style="margin-top: 8px;">View All Petitions</a>
+</div>
+{% endif %}
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("✅ Dashboard scripts active");
+
+  // --- Helper: get CSRF ---
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  }
+
+  // --- Safe global toast (fallback if missing) ---
+  function safeToast(msg, isError = false) {
+    if (typeof showToast === "function") {
+      showToast(msg, isError);
+    } else {
+      alert(msg);
+    }
+  }
+
+  // --- Admin: Approve Petition ---
+  document.querySelectorAll(".approve-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      try {
+        const response = await fetch(`/api/petition/${id}/approve/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "Accept": "application/json"
+          }
+        });
+
+        let data = {};
+        try { data = await response.json(); } catch {}
+
+        if (response.ok) {
+          safeToast(data.message || "✅ Petition approved!");
+          const card = document.getElementById(`petition-${id}`);
+          if (card) {
+            card.classList.add("fade-out");
+            setTimeout(() => card.remove(), 600);
+          }
+        } else {
+          safeToast(data.error || "⚠️ Approval failed.", true);
+        }
+      } catch (err) {
+        console.error("❌ Approve error:", err);
+        safeToast("⚠️ Network error.", true);
+      }
+    });
+  });
+
+  // --- Citizen: Submit for Review ---
+  document.querySelectorAll(".submit-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      try {
+        const response = await fetch(`/api/petition/${id}/submit-for-review/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "Accept": "application/json"
+          }
+        });
+
+        let data = {};
+        try { data = await response.json(); } catch {}
+
+        if (response.ok) {
+          safeToast(data.message || "📤 Petition submitted for review!");
+          const card = document.getElementById(`petition-${id}`);
+          if (card) {
+            const btn = card.querySelector(".submit-btn");
+            if (btn) btn.remove();
+            card.querySelector("span").innerHTML =
+              'Status: <span style="color:var(--warning);font-weight:600;">Pending Review</span>';
+          }
+        } else {
+          safeToast(data.error || "⚠️ Submission failed.", true);
+        }
+      } catch (err) {
+        console.error("❌ Submit error:", err);
+        safeToast("⚠️ Network error.", true);
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}

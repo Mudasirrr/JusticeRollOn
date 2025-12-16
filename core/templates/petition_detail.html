@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ petition.title }} - Justice RollOn{% endblock %}
+{% block content %}
+
+<div class="card" style="padding:24px;max-width:800px;margin:auto;">
+  <h2 style="margin-bottom:10px;">⚖️ {{ petition.title }}</h2>
+
+  <div style="color:#475569;margin-bottom:12px;">
+    <strong>Category:</strong> {{ petition.category }} |
+    <strong>Visibility:</strong> {{ petition.visibility|title }} |
+    <strong>Created:</strong> {{ petition.created_at|date:"M d, Y" }}
+  </div>
+
+  <p style="font-size:15px;line-height:1.6;margin-bottom:20px;">{{ petition.description }}</p>
+
+  {% if petition.evidences.all %}
+    <h4 style="margin-bottom:8px;">📁 Attached Evidence</h4>
+    <ul style="margin:0 0 16px 0;padding-left:20px;">
+      {% for e in petition.evidences.all %}
+        <li>
+          {{ e.title }}
+          {% if e.verification_status == "verified" %}
+            <span style="color:var(--success);font-size:13px;">✔ Verified</span>
+          {% else %}
+            <span style="color:var(--warning);font-size:13px;">Pending</span>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li style="color:#64748B;">No evidence attached.</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <div style="margin-bottom:12px;">
+    <strong>👥 Supporters:</strong> {{ petition.supporter_count }}
+  </div>
+
+  {% if user.is_authenticated and user.role == "citizen" %}
+    {% if user_supported %}
+      <button class="btn outline" disabled>✅ You supported this petition</button>
+    {% else %}
+      <button class="btn support-btn" data-id="{{ petition.id }}">❤️ Support This Petition</button>
+    {% endif %}
+  {% else %}
+    <p style="color:#64748B;">🔒 Login as a citizen to support this petition.</p>
+  {% endif %}
+</div>
+
+<!-- 🔔 Toast Container -->
+<div class="toasts bottom-right" id="toast-container"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const supportBtn = document.querySelector(".support-btn");
+  if (!supportBtn) return;
+
+  supportBtn.addEventListener("click", async () => {
+    const id = supportBtn.dataset.id;
+    try {
+      const response = await fetch(`/api/petition/${id}/join/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCookie("csrftoken"),
+          "Accept": "application/json"
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast(data.message || "✅ You supported this petition!");
+        supportBtn.innerText = "✅ Supported";
+        supportBtn.disabled = true;
+      } else {
+        showToast(data.error || "⚠️ Something went wrong.", true);
+      }
+    } catch (error) {
+      showToast("⚠️ Network error.", true);
+    }
+  });
+
+  // Toast Helper
+  function showToast(message, isError = false) {
+    const toastContainer = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    toast.style.borderLeft = isError
+      ? "4px solid #dc2626"
+      : "4px solid var(--success)";
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+
+  // CSRF Helper
+  function getCookie(name) {
+    const cookieValue = document.cookie
+      .split(";")
+      .map(c => c.trim())
+      .find(c => c.startsWith(name + "="));
+    return cookieValue ? decodeURIComponent(cookieValue.split("=")[1]) : null;
+  }
+});
+</script>
+
+{% endblock %}

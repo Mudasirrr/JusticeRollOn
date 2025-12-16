@@ -1,0 +1,893 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Justice RollOn Dashboard</title>
+    <!-- We're using your exact CSS classes and inline styles for consistency -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #F8FAFC;
+            color: #1E293B;
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .topbar {
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2563EB;
+        }
+
+        .topbar-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .topbar-item {
+            width: 32px;
+            height: 32px;
+            background: #E2E8F0;
+            border-radius: 6px;
+        }
+
+        /* Main Layout */
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #E2E8F0;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .sidebar-item:hover {
+            background: #F1F5F9;
+        }
+
+        .sidebar-item.active {
+            background: #EFF6FF;
+            border-left-color: #2563EB;
+            color: #2563EB;
+            font-weight: 500;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            padding: 0 20px;
+            gap: 20px;
+        }
+
+        .tab {
+            padding: 12px 0;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #64748B;
+            /* Added to prevent text selection jump */
+            user-select: none;
+        }
+
+        .tab.active {
+            border-bottom-color: #2563EB;
+            color: #2563EB;
+            font-weight: 500;
+        }
+
+        /* View Container */
+        .view-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        /* Petition & Evidence List Styling (Using wireframe classes where possible) */
+        .list-wrapper {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+            padding: 16px;
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+        
+        /* Petition Card Styles for the list-wrapper petitions */
+        .card-item {
+            padding: 12px;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            background: #F8FAFC;
+        }
+
+        /* Public Petition Card Styles */
+        .public-card {
+            padding: 14px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #E2E8F0;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .upload-card {
+            padding: 12px;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            background: #F8FAFC;
+        }
+
+        .input, select {
+            padding: 10px 12px;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        /* Header with CTA */
+        .header-with-cta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #2563EB;
+            border: 1px solid #2563EB;
+        }
+
+        .btn-primary {
+            background: #2563EB;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1D4ED8;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1E293B;
+            border: 1px solid #E2E8F0;
+        }
+
+        .btn-secondary:hover {
+            background: #F8FAFC;
+        }
+        
+        /* Status Colors (Approximating your variables) */
+        .status-published { color: #10B981; } /* Green - Success */
+        .status-pending { color: #F59E0B; } /* Orange - Warning */
+        .status-draft { color: #64748B; } /* Gray - Ink */
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="logo">JusticeRollOn</div>
+            <div class="topbar-right">
+                
+                <!-- USER INFO -->
+                {% if user.is_authenticated %}
+                <div style="font-size: 14px; color: #1E293B; font-weight: 500;">
+                    Welcome, <span style="color: #2563EB;">{{ user.username|title }}</span> (<span style="text-transform: capitalize;">{{ user.role }}</span>)
+                </div>
+                {% endif %}
+                
+                <a class="btn btn-secondary" href="{% url 'logout' %}" style="width: auto; height: auto; padding: 6px 12px;">Logout</a>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-item active">Matters</div>
+                <div class="sidebar-item">Evidence Library</div>
+                <div class="sidebar-item">Depositions</div>
+                <div class="sidebar-item">Timeline</div>
+                <div class="sidebar-item">Exports</div>
+                <div class="sidebar-item">Audit Log</div>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Tabs -->
+                <div class="tab-nav">
+                    <!-- Tab Names (Mapped to viewMap array in JS) -->
+                    <div class="tab active" data-view-id="petitionView">Your Petitions</div>
+                    <div class="tab" data-view-id="publicPetitionsView">Public Petitions</div> <!-- NEW TAB -->
+                    <div class="tab" data-view-id="evidenceView">Evidence</div>
+                    <div class="tab" data-view-id="depositionsView">Depositions</div>
+                    <div class="tab" data-view-id="activityView">Activity</div>
+                    <div class="tab" data-view-id="settingsView">Settings</div>
+                </div>
+
+                <!-- View Container -->
+                <div class="view-container" id="mainView">
+                    
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    {% comment %} 1. YOUR PETITIONS VIEW (Citizen/Admin Logic) {% endcomment %}
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    <div id="petitionView">
+                        
+                        {% if admin_view %}
+                        <!-- ADMIN VIEW: PETITIONS PENDING APPROVAL -->
+                        <div class="header-with-cta">
+                            <div class="header-title">🧾 Petitions Pending Approval</div>
+                            <!-- NEW: Local Search Input for Admin Petitions -->
+                            <input type="text" id="petitionSearchInput" class="search-box" placeholder="Search Petitions..." 
+                                style="width: 200px; padding: 6px 12px; font-size: 14px;" 
+                                value="{{ request.GET.q|default:'' }}">
+                        </div>
+                        
+                        <div class="list-wrapper" data-search-target="petition">
+                            {% for p in petitions %}
+                            <!-- ADDED: data-search attribute for JS filtering -->
+                            <div class="card-item petition-card-item" id="petition-{{ p.id }}" 
+                                data-search-text="{{ p.title }} {{ p.description }} {{ p.creator.username }} {{ p.category }}">
+                                <h3 style="margin-top: 0; font-size: 16px; margin-bottom: 4px;">{{ p.title }}</h3>
+                                <p style="margin-bottom: 6px; font-size: 14px; color: #64748B;">{{ p.description|truncatechars:100 }}</p>
+                                
+                                <div style="font-size: 14px; color: #64748B; margin-top: 8px;">
+                                    <strong>Creator:</strong> {{ p.creator.username }} |
+                                    <strong>Category:</strong> {{ p.category }} |
+                                    <strong>Created:</strong> {{ p.created_at|date:"M d, Y" }}
+                                </div>
+                                
+                                <button class="btn btn-primary approve-btn" data-id="{{ p.id }}" style="margin-top: 10px; padding: 6px 12px; font-size: 13px;">✅ Approve Petition</button>
+                            </div>
+                            {% empty %}
+                            <p class="empty-message" style="color: #64748B; padding: 10px; text-align: center;">🎉 No pending petitions right now. All caught up!</p>
+                            {% endfor %}
+                        </div>
+
+                        {% else %}
+                        <!-- CITIZEN VIEW: YOUR CREATED PETITIONS -->
+                        <div class="header-with-cta">
+                            <div class="header-title">📜 Your Petitions</div>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <!-- NEW: Local Search Input for Citizen Petitions -->
+                                <input type="text" id="petitionSearchInput" class="search-box" placeholder="Search Petitions..." 
+                                    style="width: 200px; padding: 6px 12px; font-size: 14px;" 
+                                    value="{{ request.GET.q|default:'' }}">
+                                <a class="btn btn-primary" href="{% url 'petition_create' %}" style="padding: 6px 12px;">+ Create New Petition</a>
+                            </div>
+                        </div>
+                        
+                        <div class="list-wrapper" data-search-target="petition">
+                            {% for p in petitions %}
+                            <!-- ADDED: data-search attribute for JS filtering -->
+                            <div class="card-item petition-card-item" id="petition-{{ p.id }}"
+                                data-search-text="{{ p.title }} {{ p.description }} {{ p.category }}">
+                                <h3 style="margin-top: 0; font-size: 16px; margin-bottom: 4px;">{{ p.title }}</h3>
+                                <p style="margin-bottom: 6px; font-size: 14px; color: #64748B;">{{ p.description|truncatechars:100 }}</p>
+                                <span style="font-size: 14px; display: flex; align-items: center; margin-top: 8px;">
+                                    Status:
+                                    {% if p.status == "published" %}
+                                      <span class="status-published" style="font-weight: 600; margin-left: 5px;">Published</span>
+                                    {% elif p.status == "pending" %}
+                                      <span class="status-pending" style="font-weight: 600; margin-left: 5px;">Pending Review</span>
+                                    {% elif p.status == "draft" %}
+                                      <span class="status-draft" style="font-weight: 600; margin-left: 5px;">Draft</span>
+                                      <button class="btn btn-secondary submit-btn" data-id="{{ p.id }}" style="margin-left: 8px; padding: 4px 10px; font-size: 13px;">📤 Submit for Review</button>
+                                    {% else %}
+                                      <span class="status-draft" style="font-weight: 600; margin-left: 5px;">{{ p.status|title }}</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% empty %}
+                            <p class="empty-message" style="color: #64748B; padding: 10px; text-align: center;">You haven't created any petitions yet.</p>
+                            {% endfor %}
+                            <a class="btn btn-secondary" href="{% url 'petition_list' %}" style="margin-top: 10px; text-align: center;">View All Petitions</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    {% comment %} 1B. PUBLIC PETITIONS VIEW (NEW) {% endcomment %}
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    <div id="publicPetitionsView" style="display: none;">
+                        <div class="header-with-cta">
+                            <div class="header-title">🌍 Public Petitions (Approved)</div>
+                        </div>
+
+                        <!-- 🔍 Search Bar (Public Index style) -->
+                        <form method="get" action="{% url 'justice_index' %}" style="margin-bottom: 20px; display:flex; gap:8px;">
+                            <input type="text" name="q" value="{{ query_public }}"
+                                placeholder="Search petitions by title or category..."
+                                class="input" style="flex:1;padding:10px 12px;border-radius:6px;border:1px solid #E2E8F0;">
+                            <button type="submit" class="btn btn-primary">🔍 Search</button>
+                            {% if query_public %}
+                                <a href="{% url 'justice_index' %}" class="btn btn-secondary">Clear</a>
+                            {% endif %}
+                        </form>
+
+                        <!-- 📜 Petition List -->
+                        <div class="list-wrapper">
+                            {% if petitions %}
+                                {% for p in petitions %}
+                                <div class="public-card" id="public-petition-{{ p.id }}">
+                                    <h3 style="margin-top:0; font-size: 18px;">{{ p.title }}</h3>
+                                    <p style="margin-bottom:10px; font-size: 14px; color: #475569;">{{ p.description|truncatechars:180 }}</p>
+
+                                    <div style="font-size:14px;color:#475569;margin-bottom:8px;">
+                                        <strong>Category:</strong> {{ p.category }} |
+                                        <strong>Created:</strong> {{ p.created_at|date:"M d, Y" }}
+                                    </div>
+
+                                    {% if p.supporter_count %}
+                                        <div style="font-size:13px;color:#64748B;" id="supporter-count-{{ p.id }}">👥 {{ p.supporter_count }} supporters</div>
+                                    {% endif %}
+
+                                    {% if p.creator %}
+                                        <div style="font-size:13px;color:#94A3B8;">🧑‍⚖️ Created by {{ p.creator.username }}</div>
+                                    {% endif %}
+                                    
+                                    <div style="margin-top:10px; display: flex; gap: 8px;">
+                                        <a href="{% url 'petition_detail' p.id %}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">View Details</a>
+                                        
+                                        {% comment %} Check if user is logged in and is a citizen {% endcomment %}
+                                        {% if user.is_authenticated and user.role == "citizen" %}
+                                            {% comment %} Assume 'user_supported' logic is handled by a method on the petition object or a separate context variable {% endcomment %}
+                                            {% comment %} NOTE: We use a data attribute 'is-supported' which you MUST populate in your Python view. {% endcomment %}
+                                            <button 
+                                                class="btn support-btn {% if p.user_supported %}btn-secondary{% else %}btn-primary{% endif %}" 
+                                                data-id="{{ p.id }}" 
+                                                data-supported="{% if p.user_supported %}true{% else %}false{% endif %}"
+                                                {% if p.user_supported %}disabled{% endif %}
+                                                style="padding: 6px 12px; font-size: 13px;">
+                                                {% if p.user_supported %}✅ Supported{% else %}❤️ Support This Petition{% endif %}
+                                            </button>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="public-card" style="text-align:center;">
+                                    <p style="color:#64748B;">No published petitions found.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+  </div> <!-- END of publicPetitionsView -->
+
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    {% comment %} 2. EVIDENCE VIEW {% endcomment %}
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    <div id="evidenceView" style="display: none;">
+                        <div class="header-with-cta">
+                            <div class="header-title">Evidence Upload & Library</div>
+                        </div>
+
+                        <!-- ✅ Evidence Upload Form -->
+                  <div class="card" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+  <h3 style="margin-bottom: 0.75rem;">Upload New Evidence</h3>
+
+  {% if user.role == "citizen" %}
+  <form method="post" enctype="multipart/form-data" id="evidenceUploadForm">
+    {% csrf_token %}
+
+    <div style="margin-bottom: 0.5rem;">
+      <input type="text" name="title" placeholder="Enter title" required 
+             class="input" 
+             style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <input type="text" name="rule_violation" placeholder="Rule Violation (e.g., IPC Section 420)" 
+             class="input" 
+             style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <input type="text" name="party_involved" placeholder="Party Involved (The one who harmed)" 
+             class="input" 
+             style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <input type="text" name="harm" placeholder="Harm Caused (The damage done)" 
+             class="input" 
+             style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <select name="file_type" class="input" 
+              style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+        <option value="image">Image</option>
+        <option value="pdf">PDF</option>
+        <option value="video">Video</option>
+        <option value="doc">Document</option>
+        <option value="other" selected>Other</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 0.75rem;">
+      <input type="file" name="file" required 
+             style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <button type="submit" class="btn" 
+            style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      Upload Evidence
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+                        <!-- ✅ Evidence List -->
+                        <h3 style="margin-top: 0; font-size: 16px; margin-bottom: 12px;">Uploaded Files</h3>
+                        <div class="list-wrapper" style="padding: 12px; gap: 8px;" data-search-target="evidence">
+                            <!-- NEW: Evidence Search Input for live filtering -->
+                            <input type="text" id="evidenceSearchInput" class="search-box" placeholder="Search Evidences..." 
+                                style="margin-bottom: 10px; padding: 6px 12px; font-size: 14px;">
+
+                            {% for e in evidences %}
+                            <!-- ADDED: data-search attribute for JS filtering -->
+                            <div class="card-item evidence-card-item" style="display: flex; justify-content: space-between; align-items: center;"
+                                data-search-text="{{ e.title }} {{ e.file_type }} {{ e.verification_status }}">
+                                <div>
+                                    <strong style="font-size: 14px;">{{ e.title }}</strong><br>
+                                    <span style="font-size: 12px; color: #64748B;">Type: {{ e.file_type }} | Status: {{ e.verification_status }}</span>
+                                </div>
+                                <a href="{{ e.file.url }}" target="_blank" class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">View File</a>
+                            </div>
+                            {% empty %}
+                            <p class="empty-message" style="color: #64748B; text-align: center;">No evidences uploaded yet.</p>
+                            {% endfor %}
+                        </div>
+                     </div>
+
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    {% comment %} 3. DEPOSITIONS VIEW (Placeholder) {% endcomment %}
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    <div id="depositionsView" style="display: none;">
+                        <div class="header-with-cta">
+                            <div class="header-title">Depositions View</div>
+                        </div>
+                    <!-- Include DataTables CSS & JS -->
+<link rel="stylesheet" 
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<!-- Custom Table Styling -->
+<style>
+  /* Add blue border and cell lines */
+  #evidenceTable {
+    border: 2px solid #007bff !important;
+    border-collapse: collapse !important;
+  }
+  #evidenceTable th,
+  #evidenceTable td {
+    border: 1px solid #007bff !important;
+    padding: 8px 10px !important;
+    text-align: left;
+  }
+  #evidenceTable th {
+    background-color: #eaf3ff !important;
+  }
+  #evidenceTable tr:nth-child(even) {
+    background-color: #f9fbff !important;
+  }
+  #evidenceTable tr:hover {
+    background-color: #e3f0ff !important;
+  }
+</style>
+
+<div class="card" style="margin-bottom: 1rem;">
+  {% if evidences %}
+  <div style="overflow-x: auto;">
+    <table id="evidenceTable" class="display" style="width: 100%;">
+      <thead>
+        <tr>
+          <th>Uploaded At</th>
+          <th>Title</th>
+          <th>Rule Violation</th>
+          <th>Party Involved</th>
+          <th>Harm</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in evidences %}
+        <tr>
+          <td>{{ e.uploaded_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ e.title }}</td>
+          <td>{{ e.rule_violation|default:"—" }}</td>
+          <td>{{ e.party_involved|default:"—" }}</td>
+          <td>{{ e.harm|truncatechars:80|default:"—" }}</td>
+          <td>{{ e.file_type }}</td>
+          <td>
+            {% if e.verification_status == "verified" %}
+              <span style="color: green;">Verified</span>
+            {% elif e.verification_status == "rejected" %}
+              <span style="color: red;">Rejected</span>
+            {% else %}
+              <span style="color: orange;">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ e.file.url }}" download 
+               style="padding: 5px 10px; background: #007bff; color: #fff; border-radius: 4px; text-decoration: none;">
+               Download
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p>No evidences available yet.</p>
+  {% endif %}
+</div>
+
+<!-- Activate DataTable -->
+<script>
+  $(document).ready(function() {
+    $('#evidenceTable').DataTable({
+      pageLength: 5,
+      lengthMenu: [5, 10, 20, 50],
+      order: [[5, 'desc']],
+      columnDefs: [
+        { orderable: false, targets: [7] } // disable sorting on Download column
+      ]
+    });
+  });
+</script>
+
+
+                    </div>
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    {% comment %} 4. ACTIVITY VIEW (Placeholder) {% endcomment %}
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    <div id="activityView" style="display: none;">
+                        <div class="header-with-cta">
+                            <div class="header-title">Activity/Timeline View</div>
+                            <input type="text" id="activitySearchInput" class="search-box" placeholder="Search Activity..." 
+                                style="width: 200px; padding: 6px 12px; font-size: 14px;">
+                        </div>
+                        <div class="list-wrapper" data-search-target="activity">
+                            {% comment %} Placeholder Content {% endcomment %}
+                            <p class="card-item" data-search-text="User John Doe logged in">👤 User John Doe logged in (1 hour ago)</p>
+                            <p class="card-item" data-search-text="Petition X approved">✅ Petition X approved by Admin (yesterday)</p>
+                            <p class="card-item" data-search-text="New evidence uploaded">⬆️ New evidence uploaded (5 days ago)</p>
+                            <p class="empty-message" style="display:none; color: #64748B; padding: 10px; text-align: center;">No activity found.</p>
+                        </div>
+                    </div>
+
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    {% comment %} 5. SETTINGS VIEW (Placeholder) {% endcomment %}
+                    {% comment %} ----------------------------------------- {% endcomment %}
+                    <div id="settingsView" style="display: none;">
+                        <div class="header-with-cta"><div class="header-title">Settings</div></div>
+                        <p style="color: #64748B;">Placeholder for User Settings.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+        
+        // --- LIVE SEARCH FILTER FUNCTION ---
+        function applyLiveFilter(query, listTargetId) {
+            // Find the list wrapper within the active view
+            const listWrapper = document.querySelector(`#${listTargetId} [data-search-target]`);
+            if (!listWrapper) return;
+            
+            // Query selector to match all searchable card types
+            const cards = listWrapper.querySelectorAll('.petition-card-item, .evidence-card-item, .card-item');
+            const queryLower = query.toLowerCase();
+            let matchesFound = 0;
+
+            cards.forEach(card => {
+                const searchText = card.dataset.searchText ? card.dataset.searchText.toLowerCase() : '';
+                const isMatch = searchText.includes(queryLower);
+                
+                // Set display to '' to revert to default, or 'none' to hide
+                card.style.display = isMatch ? '' : 'none';
+                if (isMatch) {
+                    matchesFound++;
+                }
+            });
+
+            // Update empty message visibility
+            const emptyMessage = listWrapper.querySelector('.empty-message');
+            if (emptyMessage) {
+                // Show the empty message if no matches were found *and* the list originally had data (or if the list was initially empty)
+                emptyMessage.style.display = (matchesFound === 0) ? 'block' : 'none';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Tab Navigation Setup ---
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const viewId = tab.dataset.viewId;
+
+                    // 1. Toggle tab active state
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // 2. Hide all view containers
+                    document.querySelectorAll('#mainView > div').forEach(v => v.style.display = 'none');
+                    
+                    // 3. Show the correct view element
+                    const viewElement = document.getElementById(viewId);
+                    if (viewElement) {
+                        viewElement.style.display = 'block';
+                    }
+                });
+            });
+
+            // --- Ensure the default tab is shown on load and apply filter if query exists ---
+            const defaultTab = document.querySelector('.tab.active');
+            if (defaultTab) {
+                const defaultViewId = defaultTab.dataset.viewId;
+                const defaultView = document.getElementById(defaultViewId);
+                if (defaultView) {
+                    defaultView.style.display = 'block';
+                }
+                
+                // Check for initial query passed by Django (e.g., if a previous search failed to filter the python side)
+                const initialQuery = document.getElementById('petitionSearchInput') ? document.getElementById('petitionSearchInput').value : '';
+                if (initialQuery) {
+                    applyLiveFilter(initialQuery, defaultViewId);
+                }
+            }
+
+            // --- Sidebar navigation (kept for completeness) ---
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                });
+            });
+            
+            // --- Attach Live Search Listeners ---
+            
+            // Listener 1: Petition Search Input
+            const petitionSearchInput = document.getElementById('petitionSearchInput');
+            if (petitionSearchInput) {
+                petitionSearchInput.addEventListener('keyup', (event) => {
+                    // Always apply filter to the PetitionView since this is a specific input
+                    applyLiveFilter(event.target.value, 'petitionView');
+                });
+            }
+            
+            // Listener 2: Evidence Search Input
+            const evidenceSearchInput = document.getElementById('evidenceSearchInput');
+            if (evidenceSearchInput) {
+                evidenceSearchInput.addEventListener('keyup', (event) => {
+                    applyLiveFilter(event.target.value, 'evidenceView');
+                });
+            }
+            
+            // Listener 3: Depositions Search Input (Placeholder Logic)
+            const depositionsSearchInput = document.getElementById('depositionsSearchInput');
+            if (depositionsSearchInput) {
+                depositionsSearchInput.addEventListener('keyup', (event) => {
+                    applyLiveFilter(event.target.value, 'depositionsView');
+                });
+            }
+
+            // Listener 4: Activity Search Input (Placeholder Logic)
+            const activitySearchInput = document.getElementById('activitySearchInput');
+            if (activitySearchInput) {
+                activitySearchInput.addEventListener('keyup', (event) => {
+                    applyLiveFilter(event.target.value, 'activityView');
+                });
+            }
+
+
+            // --- Evidence Upload AJAX Handler (FIXED) ---
+            const uploadForm = document.getElementById("evidenceUploadForm");
+            if (uploadForm) {
+                uploadForm.addEventListener("submit", async (event) => {
+                    event.preventDefault(); // Stop the browser's default redirect
+                    
+                    const form = event.target;
+                    const formData = new FormData(form);
+                    
+                    if (typeof showToast === "function") {
+                        showToast("Uploading evidence...", false);
+                    } else {
+                        // Fallback alert (as requested)
+                        alert("Uploading evidence...");
+                    }
+
+                    try {
+                        const response = await fetch('/api/upload-evidence/', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                "X-CSRFToken": document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1],
+                                "Accept": "application/json"
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            // Success: Show confirmation and reload the page to update the list
+                            const successMsg = data.message || "✅ Evidence uploaded successfully!";
+                            alert(successMsg); 
+                            window.location.reload(); // Reload the whole page to fetch the new list data
+                            
+                        } else {
+                            // Failure
+                            const errorMsg = data.error || "⚠️ Upload failed due to server error.";
+                            alert(errorMsg);
+                        }
+                    } catch (err) {
+                        console.error("Upload network error:", err);
+                        alert("⚠️ Network error during upload.", true);
+                    }
+                });
+            }
+            
+            // --- AJAX Functionality (Centralized Action Handler) ---
+            document.addEventListener("click", async (event) => {
+                const submitBtn = event.target.closest(".submit-btn");
+                const approveBtn = event.target.closest(".approve-btn");
+                const supportBtn = event.target.closest(".support-btn"); // NEW: Support button check
+                const btn = submitBtn || approveBtn || supportBtn;
+                
+                if (!btn) return;
+
+                const id = btn.dataset.id;
+                let endpoint, actionText;
+
+                if (btn.classList.contains('approve-btn')) {
+                    endpoint = `/api/petition/${id}/approve/`;
+                    actionText = "approve";
+                } else if (btn.classList.contains('submit-btn')) {
+                    endpoint = `/api/petition/${id}/submit-for-review/`;
+                    actionText = "submit";
+                } else if (btn.classList.contains('support-btn')) { // NEW: Support logic
+                    endpoint = `/api/petition/${id}/join/`;
+                    actionText = "support";
+                }
+
+                // Using window.confirm as we don't have safeToast defined here.
+                if (!confirm(`Are you sure you want to ${actionText} this petition?`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: "POST",
+                        headers: {
+                            // NOTE: Simplified cookie retrieval; ensure this works in your environment
+                            "X-CSRFToken": document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1],
+                            "Accept": "application/json"
+                        }
+                    });
+
+                    let data = {};
+                    try { data = await response.json(); } catch (e) { /* silent fail */ }
+
+                    // --- SUCCESS ---
+                    if (response.ok) {
+                        alert(data.message || `✅ Petition ${actionText}ed successfully!`);
+
+                        if (btn.classList.contains('approve-btn')) {
+                            // Admin Success: Remove the card from the pending list
+                            document.getElementById(`petition-${id}`).remove(); 
+
+                        } else if (btn.classList.contains('submit-btn')) {
+                            // Citizen Submit Success: Remove submit button and update status text
+                            const card = document.getElementById(`petition-${id}`);
+                            card.querySelector(".submit-btn").remove();
+                            card.querySelector("span").innerHTML = 
+                                'Status: <span class="status-pending" style="font-weight:600; margin-left: 5px;">Pending Review</span>';
+                        
+                        } else if (btn.classList.contains('support-btn')) { // NEW: Support UI update
+                            // Public Support Success: Disable button and update supporter count
+                            const supportCountDiv = document.getElementById(`supporter-count-${id}`);
+                            
+                            btn.textContent = "✅ You supported this petition";
+                            btn.classList.remove('btn-primary');
+                            btn.classList.add('btn-secondary');
+                            btn.disabled = true;
+
+                            if (supportCountDiv && data.supporters !== undefined) {
+                                supportCountDiv.innerHTML = `👥 ${data.supporters} supporters`;
+                            }
+                        }
+                    // --- FAILURE ---
+                    } else {
+                        alert(data.error || `⚠️ Failed to ${actionText} petition.`, true);
+                    }
+                } catch (err) {
+                    console.error(`❌ ${actionText} error:`, err);
+                    alert("⚠️ Network error.", true);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

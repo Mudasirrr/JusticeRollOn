@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Consultations</h2>
+{% for s in slots %}
+<div class="card">
+  <strong>{{ s.lawyer.username }}</strong><br>
+  {{ s.start_time }} | {{ s.duration_minutes }} mins | {% if s.is_booked %}Booked{% else %}Free{% endif %}
+</div>
+{% empty %}
+<p>No consultation slots.</p>
+{% endfor %}
+{% endblock %}

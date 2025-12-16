@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Register</h2>
+
+<form method="post" action="">
+  {% csrf_token %}
+  <div style="margin-bottom: 0.5rem;">
+    <input type="text" name="username" placeholder="Username" required style="width:100%; padding:8px;">
+  </div>
+  <div style="margin-bottom: 0.5rem;">
+    <input type="password" name="password" placeholder="Password" required style="width:100%; padding:8px;">
+  </div>
+  <div style="margin-bottom: 0.5rem;">
+    <select name="role" required style="width:100%; padding:8px;">
+      <option value="citizen" selected>Citizen</option>
+      <option value="lawyer">Lawyer</option>
+      <option value="admin">Admin</option>
+    </select>
+  </div>
+  <button type="submit" class="btn">Register</button>
+</form>
+
+<p>Already have an account? <a href="/login/">Login here</a>.</p>
+{% endblock %}

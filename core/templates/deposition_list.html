@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Your Depositions</h2>
+{% for d in depositions %}
+<div class="card">
+  <strong>{{ d.title }}</strong><br>
+  Updated: {{ d.updated_at|date:"Y-m-d" }}
+</div>
+{% empty %}
+<p>No depositions yet.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Justice Board - Approved Petitions{% endblock %}
+{% block content %}
+
+<h2 style="margin-bottom: 16px;">⚖️ Justice RollOn — Public Petitions</h2>
+
+<!-- 🔍 Search Bar -->
+<form method="get" action="" style="margin-bottom: 20px; display:flex; gap:8px;">
+  <input type="text" name="q" value="{{ query }}"
+         placeholder="Search petitions by title or category..."
+         style="flex:1;padding:10px;border-radius:8px;border:1px solid #CBD5E1;">
+  <button type="submit" class="btn">🔍 Search</button>
+  {% if query %}
+    <a href="{% url 'justice_index' %}" class="btn outline">Clear</a>
+  {% endif %}
+</form>
+
+<!-- 📜 Petition List -->
+{% if petitions %}
+  {% for p in petitions %}
+    <div class="card" style="margin-bottom: 14px;">
+      <h3 style="margin-top:0;">{{ p.title }}</h3>
+      <p style="margin-bottom:10px;">{{ p.description|truncatechars:180 }}</p>
+
+      <div style="font-size:14px;color:#475569;margin-bottom:8px;">
+        <strong>Category:</strong> {{ p.category }} |
+        <strong>Created:</strong> {{ p.created_at|date:"M d, Y" }}
+      </div>
+
+      {% if p.supporter_count %}
+        <div style="font-size:13px;color:#64748B;">👥 {{ p.supporter_count }} supporters</div>
+      {% endif %}
+
+      {% if p.creator %}
+        <div style="font-size:13px;color:#94A3B8;">🧑‍⚖️ Created by {{ p.creator.username }}</div>
+      {% endif %}
+
+      <a href="{% url 'petition_detail' p.id %}" class="btn outline" style="margin-top:10px;">View Details</a>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card" style="text-align:center;">
+    <p style="color:#64748B;">No published petitions found.</p>
+  </div>
+{% endif %}
+
+{% endblock %}

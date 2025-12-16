@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Create Petition - Justice RollOn{% endblock %}
+{% block content %}
+
+<h2 style="margin-bottom: 16px;">📝 Create New Petition</h2>
+
+<form method="POST" class="card" style="padding: 20px; max-width: 650px;">
+  {% csrf_token %}
+
+  <!-- 🏷️ Title -->
+  <label class="form-label">Title *</label>
+  <input type="text" name="title" required
+         placeholder="Enter petition title"
+         style="width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:1px solid #CBD5E1;">
+
+  <!-- 🧾 Description -->
+  <label class="form-label">Description *</label>
+  <textarea name="description" rows="5" required
+            placeholder="Describe your petition in detail"
+            style="width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:1px solid #CBD5E1;"></textarea>
+
+  <!-- ⚖️ Legal Category -->
+  <label class="form-label">Legal Category</label>
+  <select name="category"
+          style="width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:1px solid #CBD5E1;">
+    {% for cat in categories %}
+      <option value="{{ cat }}">{{ cat }}</option>
+    {% endfor %}
+  </select>
+
+  <!-- 🌍 Visibility -->
+  <label class="form-label">Visibility</label>
+  <select name="visibility"
+          style="width:100%;padding:10px;margin-bottom:12px;border-radius:8px;border:1px solid #CBD5E1;">
+    <option value="public">Public</option>
+    <option value="private">Private</option>
+  </select>
+
+  <!-- 📎 Attach Evidence -->
+  <label class="form-label">Attach Existing Evidence</label>
+  {% if evidences %}
+    <div style="margin:8px 0 16px 0;">
+      {% for e in evidences %}
+        <label style="display:flex;align-items:center;margin-bottom:6px;gap:8px;">
+          <input type="checkbox" name="evidences" value="{{ e.id }}">
+          <span>{{ e.title }}</span>
+          <small style="color:#64748B;">({{ e.file_type }})</small>
+          {% if e.verification_status == "verified" %}
+            <span style="color:var(--success);font-size:13px;font-weight:600;">✔ Verified</span>
+          {% else %}
+            <span style="color:var(--warning);font-size:13px;">Pending</span>
+          {% endif %}
+        </label>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="color:#64748B;margin-bottom:12px;">No evidences uploaded yet. <a href="{% url 'evidence_list' %}">Upload here</a>.</div>
+  {% endif %}
+
+  <!-- ✅ Submit -->
+  <button type="submit" class="btn" style="width:100%;margin-top:10px;">📤 Save Petition</button>
+</form>
+
+<a href="{% url 'dashboard2' %}" class="btn outline" style="margin-top:16px;display:inline-block;">
+  ← Back to Dashboard
+</a>
+
+{% endblock %}
