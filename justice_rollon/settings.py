@@ -34,7 +34,7 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: Do not enable DEBUG in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
 # Allowed hosts for the application
 # Comma-separated list via environment variable, defaults to local development
