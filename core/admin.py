@@ -1,20 +1,13 @@
 """
-Admin configuration for the justice_rollon project (core app).
+Admin configuration for the Justice RollOn core app.
 
-This file registers models with the Django admin interface and customizes
-how they are displayed, filtered, searched, and edited.
-
-The Django admin provides a powerful, ready-to-use interface for managing
-database content — ideal for superusers, moderators, and internal tools.
-
-For more information:
-https://docs.djangoproject.com/en/5.2/ref/contrib/admin/
+Registers all models with the Django admin site and provides customized,
+user-friendly list views, filters, search, and read-only protections where needed.
 """
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-# Import all models from the current app (core.models)
 from .models import (
     User,
     Evidence,
@@ -32,27 +25,14 @@ from .models import (
 # =============================================================================
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    """
-    Custom admin interface for the custom User model.
-    Extends Django's default UserAdmin to include the custom 'role' field.
-    """
-
-    # Add the 'role' field to the edit form (grouped under a "Role" section)
+    """Custom admin for the extended User model with role support."""
     fieldsets = BaseUserAdmin.fieldsets + (
         ("Role & Permissions", {"fields": ("role",)}),
     )
-
-    # Columns displayed in the user list view
     list_display = ("username", "email", "role", "is_staff", "is_superuser")
-
-    # Optional: Make role editable directly from list view
-    list_editable = ("role",)
-
-    # Enable filtering by role in the right sidebar
     list_filter = ("role", "is_staff", "is_superuser", "is_active")
-
-    # Enable search by username and email
-    search_fields = ("username", "email")
+    search_fields = ("username", "email", "first_name", "last_name")
+    list_editable = ("role",)  # Quick role changes from list view
 
 
 # =============================================================================
@@ -60,11 +40,7 @@ class UserAdmin(BaseUserAdmin):
 # =============================================================================
 @admin.register(Evidence)
 class EvidenceAdmin(admin.ModelAdmin):
-    """
-    Admin interface for managing uploaded evidence files (PDFs, images, etc.).
-    Useful for moderation and verification workflows.
-    """
-
+    """Admin interface for managing and moderating uploaded evidence."""
     list_display = (
         "title",
         "uploader",
@@ -73,12 +49,11 @@ class EvidenceAdmin(admin.ModelAdmin):
         "verification_status",
         "rule_violation",
         "party_involved",
-        "harm",
     )
     list_filter = ("verification_status", "file_type", "uploaded_at", "rule_violation")
     search_fields = ("title", "uploader__username", "description")
-    readonly_fields = ("uploaded_at", "size_bytes")  # Prevent accidental changes
-    date_hierarchy = "uploaded_at"  # Quick date-based navigation
+    readonly_fields = ("uploaded_at", "size_bytes")
+    date_hierarchy = "uploaded_at"
 
 
 # =============================================================================
@@ -86,11 +61,7 @@ class EvidenceAdmin(admin.ModelAdmin):
 # =============================================================================
 @admin.register(Petition)
 class PetitionAdmin(admin.ModelAdmin):
-    """
-    Admin interface for managing public petitions.
-    Allows moderators to review, publish, or reject petitions.
-    """
-
+    """Admin interface for reviewing and managing petitions."""
     list_display = (
         "title",
         "creator",
@@ -112,18 +83,14 @@ class PetitionAdmin(admin.ModelAdmin):
 # =============================================================================
 @admin.register(ConsultationSlot)
 class ConsultationSlotAdmin(admin.ModelAdmin):
-    """
-    Admin view for lawyer-available consultation time slots.
-    Lawyers or admins can manage availability.
-    """
-
+    """Admin view for lawyer consultation availability."""
     list_display = ("lawyer", "start_time", "end_time_display", "duration_minutes", "is_booked")
     list_filter = ("lawyer", "is_booked", "start_time")
     date_hierarchy = "start_time"
 
     def end_time_display(self, obj):
-        """Display calculated end time for better readability."""
-        return obj.end_time
+        """Show calculated end time in the list view."""
+        return obj.end_time if hasattr(obj, "end_time") else "-"
     end_time_display.short_description = "End Time"
 
 
@@ -132,15 +99,12 @@ class ConsultationSlotAdmin(admin.ModelAdmin):
 # =============================================================================
 @admin.register(ConsultationBooking)
 class ConsultationBookingAdmin(admin.ModelAdmin):
-    """
-    Admin interface for booked consultations.
-    Tracks which citizens have booked slots with lawyers.
-    """
-
-    list_display = ("slot", "user", "confirmed", "created_at", "notes")
+    """Admin interface for booked consultation slots."""
+    list_display = ("slot", "user", "confirmed", "created_at")
     list_filter = ("confirmed", "slot__lawyer", "created_at")
     search_fields = ("user__username", "slot__lawyer__username")
     readonly_fields = ("created_at",)
+    date_hierarchy = "created_at"
 
 
 # =============================================================================
@@ -148,10 +112,7 @@ class ConsultationBookingAdmin(admin.ModelAdmin):
 # =============================================================================
 @admin.register(Deposition)
 class DepositionAdmin(admin.ModelAdmin):
-    """
-    Admin interface for legal depositions prepared by lawyers or citizens.
-    """
-
+    """Admin interface for legal depositions."""
     list_display = ("title", "created_by", "created_at", "updated_at")
     list_filter = ("created_by", "created_at")
     search_fields = ("title", "content", "created_by__username")
@@ -160,15 +121,11 @@ class DepositionAdmin(admin.ModelAdmin):
 
 
 # =============================================================================
-# DEPOSITION EVIDENCE LINK ADMIN
+# DEPOSITION EVIDENCE (THROUGH MODEL) ADMIN
 # =============================================================================
 @admin.register(DepositionEvidence)
 class DepositionEvidenceAdmin(admin.ModelAdmin):
-    """
-    Admin interface for linking Evidence to Depositions (many-to-many with order).
-    Controls the sequence of evidence presented in a deposition.
-    """
-
+    """Admin interface for ordering evidence within depositions."""
     list_display = ("deposition", "evidence", "order")
     list_filter = ("deposition",)
     search_fields = ("deposition__title", "evidence__title")
@@ -181,18 +138,16 @@ class DepositionEvidenceAdmin(admin.ModelAdmin):
 @admin.register(AuditLog)
 class AuditLogAdmin(admin.ModelAdmin):
     """
-    Admin interface for system audit logs.
-    Provides transparency into user actions (create, update, delete, etc.).
-    Should be read-only to preserve integrity.
+    Read-only admin view for audit logs.
+    Only displays fields that actually exist on the model: user, action, timestamp, meta.
     """
-
-    list_display = ("user", "action", "model_name", "object_id", "timestamp")
-    list_filter = ("action", "model_name", "timestamp")
-    search_fields = ("user__username", "action", "details")
-    readonly_fields = ("user", "action", "model_name", "object_id", "details", "timestamp")
+    list_display = ("user", "action", "timestamp", "meta_preview")
+    list_filter = ("action", "timestamp")
+    search_fields = ("user__username", "action")
+    readonly_fields = ("user", "action", "timestamp", "meta")
     date_hierarchy = "timestamp"
 
-    # Prevent any modifications to audit logs
+    # Prevent any creation, modification, or deletion of audit logs
     def has_add_permission(self, request):
         return False
 
@@ -201,3 +156,15 @@ class AuditLogAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    # Friendly preview of the JSON meta field
+    def meta_preview(self, obj):
+        if not obj.meta:
+            return "-"
+        import json
+        try:
+            pretty = json.dumps(obj.meta, indent=2, ensure_ascii=False)
+            return pretty[:150] + ("..." if len(pretty) > 150 else "")
+        except Exception:
+            return str(obj.meta)[:150] + "..."
+    meta_preview.short_description = "Meta Details"
