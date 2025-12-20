@@ -1,28 +1,50 @@
 """
-URL configuration for justice_rollon project.
+URL configuration for the justice_rollon project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+This is the root URL configuration file that defines how incoming HTTP requests
+are routed to the appropriate views or included applications.
+
+It acts as the central dispatcher:
+- Routes admin requests to Django's built-in admin site
+- Delegates all other requests to the 'core' app for handling
+- Serves media files (uploads) during development
+
+For more information:
+https://docs.djangoproject.com/en/5.2/topics/http/urls/
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+# =============================================================================
+# ROOT URL PATTERNS
+# =============================================================================
 urlpatterns = [
+    # Django Admin Interface
+    # Accessible at: /admin/
+    # Provides full CRUD interface for models registered in admin.py
     path("admin/", admin.site.urls),
-    path("", include("core.urls")),  # 👈 This line connects / to your app
+
+    # Core Application URLs
+    # All other routes (including homepage) are handled by the 'core' app
+    # Example: /, /petitions/, /login/, etc. → defined in core/urls.py
+    path("", include("core.urls")),
 ]
 
+
+# =============================================================================
+# MEDIA FILES SERVING (DEVELOPMENT ONLY)
+# =============================================================================
+# In development (DEBUG = True), Django can serve user-uploaded media files
+# (e.g., evidence PDFs, profile images) directly from the MEDIA_ROOT directory.
+#
+# This is convenient for local testing but should NEVER be used in production.
+# In production, use a proper web server (Nginx) or cloud storage (S3, etc.).
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    # Optional: Also serve static files in debug mode if needed
+    # urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
