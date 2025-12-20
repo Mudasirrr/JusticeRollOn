@@ -3,7 +3,7 @@
 Plugin Name: Justice RollOn Connector
 Description: Connects WordPress with the JusticeRollOn Django backend via REST API.
 Version: 1.0
-Author: Deepanjan
+Author: Mel_Group 1 Team"
 */
 
 function jro_fetch_api($endpoint) {
