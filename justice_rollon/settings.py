@@ -35,6 +35,7 @@ SECRET_KEY = os.environ.get(
 
 # SECURITY WARNING: Do not enable DEBUG in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = ['*']  # Or add your onrender.com domain later
 
 # Allowed hosts for the application
 # Comma-separated list via environment variable, defaults to local development
