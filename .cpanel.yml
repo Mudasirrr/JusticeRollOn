@@ -1,0 +1,13 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/justicerollon/public_html/
+    - /bin/cp justice_rollon/settings.py $DEPLOYPATH/
+    - /bin/cp justice_rollon/urls.py $DEPLOYPATH/
+    - /bin/cp justice_rollon/wsgi.py $DEPLOYPATH/
+    - /bin/cp justice_rollon/asgi.py $DEPLOYPATH/
+    - /bin/cp -r justice_rollon/* $DEPLOYPATH/justice_rollon/   # Subfolder if needed
+    - /bin/cp -r core/static $DEPLOYPATH/static/
+    - /bin/cp -r core/templates $DEPLOYPATH/templates/
+    - /bin/cp manage.py $DEPLOYPATH/
+    - /bin/cp requirements.txt $DEPLOYPATH/
